@@ -13,6 +13,7 @@ export default class Map extends React.Component {
       panY: new Animated.Value(0),
     };
 
+    // Move the function into Animated.event
     this._handlePanGestureEvent = new Animated.event(
       [
         {
@@ -46,9 +47,9 @@ export default class Map extends React.Component {
   }
 
   _handlePanGestureStateChange = e => {
-    const { state, velocityX, velocityY } = e.nativeEvent;
+    const { oldState } = e.nativeEvent;
 
-    if (state === State.END) {
+    if (oldState === State.ACTIVE) {
       this.state.panX.extractOffset();
       this.state.panY.extractOffset();
     }

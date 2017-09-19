@@ -64,13 +64,9 @@ export default class Map extends React.Component {
 
     return (
       <PanGestureHandler
-        id="pan"
-        simultaneousHandlers="pinch"
         onHandlerStateChange={this._handlePanGestureStateChange}
         onGestureEvent={this._handlePanGestureEvent}>
         <PinchGestureHandler
-          id="pinch"
-          simultaneousHandlers="pan"
           onHandlerStateChange={this._handlePinchGestureStateChange}
           onGestureEvent={this._handlePinchGestureEvent}>
           <View style={StyleSheet.absoluteFill}>
@@ -99,8 +95,17 @@ export default class Map extends React.Component {
     }
   };
 
+  // Object {
+  //   "handlerTag": 2,
+  //   "oldState": 4,
+  //   "scale": 1.7075571248805619,
+  //   "state": 5,
+  //   "target": 7,
+  //   "velocity": 0.24870822872729997,
+  // }
   _handlePinchGestureStateChange = e => {
     const { oldState, scale } = e.nativeEvent;
+    console.log(e.nativeEvent);
 
     // When the gesture becomes inactive we update accumulator baseScale
     // and reset pinchScale so it's ready for another gesture

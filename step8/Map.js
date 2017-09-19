@@ -11,21 +11,23 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const IMAGE_WIDTH = 2560;
 const IMAGE_HEIGHT = 1801;
+const INITIAL_SCALE = 0.5;
 
 export default class Map extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      panX: new Animated.Value(0),
-      panY: new Animated.Value(0),
+      panX: new Animated.Value(-IMAGE_WIDTH / 2 + SCREEN_WIDTH / 2),
+      panY: new Animated.Value(-IMAGE_HEIGHT / 2 + SCREEN_HEIGHT / 2),
       pinchScale: new Animated.Value(1),
-      baseScale: new Animated.Value(1),
+      baseScale: new Animated.Value(INITIAL_SCALE),
     };
 
-    // I want to update the pan values differently depending on the current zoom
-    // level, this is difficult to express with Animated.event currently
-    // (although I believe it would be possible w/ an additional Animated.Value)
+    // ..
+    this.state.panX.extractOffset();
+    this.state.panY.extractOffset();
+
     this._handlePanGestureEvent = e => {
       const { translationX, translationY } = e.nativeEvent;
       this.state.panX.setValue(translationX * (1 / this._lastScale));
@@ -36,7 +38,9 @@ export default class Map extends React.Component {
       [{ nativeEvent: { scale: this.state.pinchScale } }],
       { useNativeDriver: USE_NATIVE_DRIVER }
     );
-    this._lastScale = 1;
+
+    // ..
+    this._lastScale = INITIAL_SCALE;
   }
 
   render() {
@@ -62,13 +66,10 @@ export default class Map extends React.Component {
                   { translateY: panY },
                   {
                     translateX: Animated.add(
-                      // Reset transform origin (react-native doesn't support transform-origin property)
-                      // https://snack.expo.io/rkXrdf1j-
                       Animated.add(
                         Animated.multiply(IMAGE_WIDTH / 2, scale),
                         -IMAGE_WIDTH / 2
                       ),
-                      // Center relative to middle of the screen
                       Animated.multiply(
                         Animated.add(panX, Animated.divide(SCREEN_WIDTH, -2)),
                         Animated.add(scale, -1)
@@ -77,12 +78,10 @@ export default class Map extends React.Component {
                   },
                   {
                     translateY: Animated.add(
-                      // Reset transform origin (react-native doesn't support transform-origin property)
                       Animated.add(
                         Animated.multiply(IMAGE_HEIGHT / 2, scale),
                         -IMAGE_HEIGHT / 2
                       ),
-                      // Center relative to middle of the screen
                       Animated.multiply(
                         Animated.add(panY, Animated.divide(SCREEN_HEIGHT, -2)),
                         Animated.add(scale, -1)

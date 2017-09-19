@@ -2,8 +2,6 @@ import React from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
-const USE_NATIVE_DRIVER = false;
-
 export default class Map extends React.Component {
   state = {
     panX: new Animated.Value(0),
@@ -27,6 +25,17 @@ export default class Map extends React.Component {
     );
   }
 
+  // Object {
+  //   "handlerTag": 1,
+  //   "state": 4,
+  //   "target": 7,
+  //   "translationX": -116.5,
+  //   "translationY": 132,
+  //   "velocityX": -437.05971438787714,
+  //   "velocityY": 52.677425640992595,
+  //   "x": 128.5,
+  //   "y": 319,
+  // }
   _handlePanGestureEvent = e => {
     console.log(e.nativeEvent);
     const { translationX, translationY } = e.nativeEvent;
