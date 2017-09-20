@@ -69,12 +69,12 @@ export default class Map extends React.Component {
     return (
       <PanGestureHandler
         id="pan"
-        simultaneousHandlers="pinch"
+        simultaneousHandlers={['pinch', 'rotate']}
         onHandlerStateChange={this._handlePanGestureStateChange}
         onGestureEvent={this._handlePanGestureEvent}>
         <PinchGestureHandler
           id="pinch"
-          simultaneousHandlers="pan"
+          simultaneousHandlers={['rotate', 'pan']}
           onHandlerStateChange={this._handlePinchGestureStateChange}
           onGestureEvent={this._handlePinchGestureEvent}>
           <RotationGestureHandler
