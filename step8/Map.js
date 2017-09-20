@@ -24,7 +24,7 @@ export default class Map extends React.Component {
       baseScale: new Animated.Value(INITIAL_SCALE),
     };
 
-    // ..
+    // Move the value into the offset
     this.state.panX.extractOffset();
     this.state.panY.extractOffset();
 
@@ -39,7 +39,7 @@ export default class Map extends React.Component {
       { useNativeDriver: USE_NATIVE_DRIVER }
     );
 
-    // ..
+    // We use this later when the gesture is completed
     this._lastScale = INITIAL_SCALE;
   }
 

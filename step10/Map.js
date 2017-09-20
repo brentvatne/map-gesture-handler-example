@@ -4,6 +4,7 @@ import {
   PanGestureHandler,
   PinchGestureHandler,
   RotationGestureHandler,
+  TapGestureHandler,
   State,
 } from 'react-native-gesture-handler';
 
@@ -13,17 +14,20 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
 const IMAGE_WIDTH = 2560;
 const IMAGE_HEIGHT = 1801;
 const INITIAL_SCALE = 0.5;
+const INITIAL_PAN_X = -IMAGE_WIDTH / 2 + SCREEN_WIDTH / 2;
+const INITIAL_PAN_Y = -IMAGE_HEIGHT / 2 + SCREEN_HEIGHT / 2;
+const INITIAL_ROTATION = 0;
 
 export default class Map extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      panX: new Animated.Value(-IMAGE_WIDTH / 2 + SCREEN_WIDTH / 2),
-      panY: new Animated.Value(-IMAGE_HEIGHT / 2 + SCREEN_HEIGHT / 2),
+      panX: new Animated.Value(INITIAL_PAN_X),
+      panY: new Animated.Value(INITIAL_PAN_Y),
       pinchScale: new Animated.Value(1),
       baseScale: new Animated.Value(INITIAL_SCALE),
-      rotation: new Animated.Value(0),
+      rotation: new Animated.Value(INITIAL_ROTATION),
     };
 
     this.state.panX.extractOffset();
@@ -41,15 +45,6 @@ export default class Map extends React.Component {
     );
     this._lastScale = INITIAL_SCALE;
 
-    // Rotation is provided in radians
-    //
-    // Object {
-    //   "handlerTag": 3,
-    //   "rotation": 0.2534833877295888,
-    //   "state": 4,
-    //   "target": 7,
-    //   "velocity": 2.445438826782535,
-    // }
     this._handleRotationGestureEvent = Animated.event(
       [{ nativeEvent: { rotation: this.state.rotation } }],
       { useNativeDriver: USE_NATIVE_DRIVER }
@@ -69,6 +64,8 @@ export default class Map extends React.Component {
     return (
       <PanGestureHandler
         id="pan"
+        minDeltaX={10}
+        minDeltaY={10}
         simultaneousHandlers="pinch"
         onHandlerStateChange={this._handlePanGestureStateChange}
         onGestureEvent={this._handlePanGestureEvent}>
@@ -82,46 +79,53 @@ export default class Map extends React.Component {
             simultaneousHandlers={['pan', 'pinch']}
             onHandlerStateChange={this._handleRotationGestureStateChange}
             onGestureEvent={this._handleRotationGestureEvent}>
-            <View style={StyleSheet.absoluteFill}>
-              <Animated.Image
-                style={{
-                  transform: [
-                    { translateX: panX },
-                    { translateY: panY },
-                    {
-                      translateX: Animated.add(
-                        Animated.add(
-                          Animated.multiply(IMAGE_WIDTH / 2, scale),
-                          -IMAGE_WIDTH / 2
-                        ),
-                        Animated.multiply(
-                          Animated.add(panX, Animated.divide(SCREEN_WIDTH, -2)),
-                          Animated.add(scale, -1)
-                        )
-                      ),
-                    },
-                    {
-                      translateY: Animated.add(
-                        Animated.add(
-                          Animated.multiply(IMAGE_HEIGHT / 2, scale),
-                          -IMAGE_HEIGHT / 2
-                        ),
-                        Animated.multiply(
+            <TapGestureHandler
+              numberOfTaps={2}
+              onHandlerStateChange={this._handleDoubleTapGestureStateChange}>
+              <View style={StyleSheet.absoluteFill}>
+                <Animated.Image
+                  style={{
+                    transform: [
+                      { translateX: panX },
+                      { translateY: panY },
+                      {
+                        translateX: Animated.add(
                           Animated.add(
-                            panY,
-                            Animated.divide(SCREEN_HEIGHT, -2)
+                            Animated.multiply(IMAGE_WIDTH / 2, scale),
+                            -IMAGE_WIDTH / 2
                           ),
-                          Animated.add(scale, -1)
-                        )
-                      ),
-                    },
-                    { scale },
-                    { rotate },
-                  ],
-                }}
-                source={require('../assets/tokyo-train-map.jpg')}
-              />
-            </View>
+                          Animated.multiply(
+                            Animated.add(
+                              panX,
+                              Animated.divide(SCREEN_WIDTH, -2)
+                            ),
+                            Animated.add(scale, -1)
+                          )
+                        ),
+                      },
+                      {
+                        translateY: Animated.add(
+                          Animated.add(
+                            Animated.multiply(IMAGE_HEIGHT / 2, scale),
+                            -IMAGE_HEIGHT / 2
+                          ),
+                          Animated.multiply(
+                            Animated.add(
+                              panY,
+                              Animated.divide(SCREEN_HEIGHT, -2)
+                            ),
+                            Animated.add(scale, -1)
+                          )
+                        ),
+                      },
+                      { scale },
+                      { rotate },
+                    ],
+                  }}
+                  source={require('../assets/tokyo-train-map.jpg')}
+                />
+              </View>
+            </TapGestureHandler>
           </RotationGestureHandler>
         </PinchGestureHandler>
       </PanGestureHandler>
@@ -147,12 +151,60 @@ export default class Map extends React.Component {
     }
   };
 
-  // Extract the value out into the offset on the last rotation
   _handleRotationGestureStateChange = e => {
     const { oldState } = e.nativeEvent;
 
     if (oldState === State.ACTIVE) {
       this.state.rotation.extractOffset();
     }
+  };
+
+  _handleDoubleTapGestureStateChange = e => {
+    const { state } = e.nativeEvent;
+
+    if (state === State.ACTIVE) {
+      this._resetState();
+    }
+  };
+
+  _resetState = () => {
+    const { panX, panY, rotation, baseScale } = this.state;
+
+    // Remove offsets
+    panX.flattenOffset();
+    panY.flattenOffset();
+    rotation.flattenOffset();
+
+    // Animate things back
+    const duration = 150;
+    Animated.timing(panX, {
+      toValue: INITIAL_PAN_X,
+      duration,
+    }).start(({ finished }) => {
+      if (finished) {
+        panX.extractOffset();
+      }
+    });
+
+    Animated.timing(panY, {
+      toValue: INITIAL_PAN_Y,
+      duration,
+    }).start(({ finished }) => {
+      if (finished) {
+        panY.extractOffset();
+      }
+    });
+
+    Animated.timing(rotation, {
+      toValue: INITIAL_ROTATION,
+      duration,
+    }).start(({ finished }) => {
+      if (finished) {
+        rotation.extractOffset();
+      }
+    });
+
+    Animated.timing(baseScale, { toValue: INITIAL_SCALE, duration }).start();
+    this._lastScale = INITIAL_SCALE;
   };
 }

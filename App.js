@@ -3,7 +3,7 @@ import { Dimensions, StyleSheet, StatusBar, View } from 'react-native';
 import { Asset, AppLoading, KeepAwake } from 'expo';
 
 // Render a map
-// import Map from './step1/Map';
+import Map from './step1/Map';
 
 // Add PanGestureHandler
 // import Map from './step2/Map';
@@ -27,8 +27,12 @@ import { Asset, AppLoading, KeepAwake } from 'expo';
 // import Map from './step8/Map';
 
 // Add rotation
-import Map from './step9/Map';
+// import Map from './step9/Map';
 
+// Add double tap for returning to center
+// import Map from './step10/Map'
+
+// Want to play with it more? Do these TODOs:
 // TODO: Fix the rotation centering
 // TODO: Decay on release pan
 // TODO: Add a pin that you can tap
